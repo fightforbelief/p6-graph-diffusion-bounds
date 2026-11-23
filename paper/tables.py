@@ -5,6 +5,8 @@ import json
 paper = Path(__file__).resolve().parent
 results = paper.parent / "results"
 primary = json.loads((results / "case_studies.json").read_text())["runs"]
+fractional = json.loads((results / "fractional_bounds.json").read_text())["runs"]
+lp = {r["dataset"]: r["lp"] for r in fractional}
 cases = {(r["dataset"], r["depth"]): r for r in primary}
 supplement = json.loads((results / "diagnostics.json").read_text())["runs"]
 diagnostics = {(r["dataset"], r["depth"]): r for r in supplement}
@@ -14,8 +16,8 @@ def span(values):
     return 100 * (max(values) - min(values))
 
 
-def interval(pair):
-    return f"{100*pair[0]:.2f}--{100*pair[1]:.2f}"
+def interval(pair, digits=2):
+    return f"{100*pair[0]:.{digits}f}--{100*pair[1]:.{digits}f}"
 
 
 def save_rows(file, macro, rows):
@@ -29,8 +31,8 @@ for row in primary:
     if row["depth"] != 1:
         continue
     dataset = name.title()
-    entries = [dataset, f'{row["nodes"]}/{row["edges"]}', f'{100*row["observed"][-1]:.2f}',
-               interval(row["bounds"]), interval(row["outer"]),
+    entries = [dataset, f'{row["nodes"]}/{row["edges"]}', interval(row["outer"]),
+               f'{100*lp[name][1]:.4f}', interval(row["bounds"], 4),
                f'{100*row["independent_label_agreement"]:.2f}', f'{span(row["sample_range"]):.2f}']
     three.append(" & ".join(entries) + r" \\")
     diagnostic = diagnostics[name, 1]

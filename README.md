@@ -12,7 +12,7 @@ Fix the depth-*r* color-refinement signature of every named vertex of a simple u
 
 | Wisconsin WebKB | Result |
 | --- | --- |
-| Three-step agreement with one round fixed | **16.08%–28.98%**, with both endpoints achieved on connected graphs. Independent stationary labels agree **29.92%** of the time. The stub-pairing upper bound is **30.68%** and leaves the sign undecided. |
+| Three-step agreement with one round fixed | **16.08%–28.98%**, with both endpoints achieved on connected graphs. The independent-label reference is **29.9222%**. The stub-pairing upper bound is **30.6841%**. The fractional LP already certifies the deficit at **28.9950%**. The largest attainable score is **28.9823%**. |
 | At most one switch from the observed graph | The change ranges from **−0.259 to +0.178 percentage points**. |
 | Five-step agreement with one versus two rounds fixed | With one round the witnessed width is **at least 15.747 percentage points**. With two rounds the full width is **0.01895 points**. These widths cover the primary family of simple graphs. |
 
@@ -32,17 +32,18 @@ py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe diagnostics.py
 .\.venv\Scripts\python.exe exact_check.py
 .\.venv\Scripts\python.exe review_checks.py
-.\.venv\Scripts\python.exe -m unittest -v test_review
+.\.venv\Scripts\python.exe fractional_bounds.py
+.\.venv\Scripts\python.exe -m unittest -v test_review test_fractional_bounds
 .\.venv\Scripts\python.exe paper/tables.py
 ~~~
 
 To check the archived release directly, run the data acquisition step and then
 
 ~~~powershell
-.\.venv\Scripts\python.exe -m unittest -v test_diffusion test_review
+.\.venv\Scripts\python.exe -m unittest -v test_diffusion test_review test_fractional_bounds
 ~~~
 
-The tests enumerate the 768 isolate-free five-vertex graphs under a fixed 3:2 label split, check the cycle construction at depths 1–8, reoptimize all 15 empirical endpoint pairs, and independently check the review witnesses. The eight-vertex enumeration uses exact fractions. An independent search over all edge pairs verifies the completeness of each depth-three switch list and checks the saved label-preserving permutations.
+The tests enumerate the 768 isolate-free five-vertex graphs under a fixed 3:2 label split, check the cycle construction at depths 1–8, reoptimize all 15 empirical endpoint pairs, and independently check the review witnesses. The eight-vertex enumeration uses exact fractions. An independent search over all edge pairs verifies the completeness of each depth-three switch list and checks the saved label-preserving permutations. The LP tests rerun both endpoints on all five graphs and independently evaluate the Wisconsin upper certificate with exact fractions.
 
 Build the paper from the root using Tectonic on paper/manuscript.tex. The vector illustration is included. Its optional regeneration script uses matplotlib with a noninteractive backend. Regenerating the case studies replaces local result files. Wall times and the choice among tied optimal witnesses can vary.
 
@@ -53,10 +54,13 @@ Build the paper from the root using Tectonic on paper/manuscript.tex. The vector
 | Primary bounds, endpoint graphs, stub bounds and 96 constrained-switch draws per instance | [experiment.py](experiment.py), [primary protocol](PROTOCOL.md) | [case_studies.json](results/case_studies.json) |
 | Maximum replacement of original edges, one-switch effects and five-step witness values | [diagnostics.py](diagnostics.py) | [diagnostics.json](results/diagnostics.json) |
 | Independent rational endpoint enumeration at depths two and three | [exact_check.py](exact_check.py) | [rational.json](results/rational.json) |
+| Fractional-edge LP endpoints, independent-label reference, and a rational Wisconsin upper certificate | [fractional_bounds.py](fractional_bounds.py) | [fractional_bounds.json](results/fractional_bounds.json) |
 | Eight-vertex control, depth-three isomorphisms and connected witnesses | [review_checks.py](review_checks.py) | [review.json](results/review.json) |
 | Connected Cornell maximum with component cuts | [connected_bound.py](connected_bound.py), called by the review program | [review.json](results/review.json), under **cornell_connected_maximum** |
 
-The review was performed after the primary study. Its result file contains the counts and representative cross-neighbor sets for the control, one permutation for each depth-three switch, and the moves that turn saved depth-one witnesses into connected graphs. To replay a switch (u,v,x,y), replace (u,v) and (x,y) by (u,y) and (x,v). Unlisted vertices in a permutation retain their names.
+The fractional-edge comparison is a post-primary analysis. It preserves all per-vertex label quotas and allows each candidate edge to have any weight in [0,1]. The LP resolves the sign relative to independent stationary labels on all five graphs. Only the Cornell and Wisconsin upper endpoints differ numerically from the simple-graph optima. The Wisconsin record includes rational vertex prices, indexed by block and vertex, and the resulting upper bound. These prices can be checked against the input graph without invoking an optimizer.
+
+The connectivity and isomorphism review was performed after the primary study. Its result file contains the counts and representative cross-neighbor sets for the control, one permutation for each depth-three switch, and the moves that turn saved depth-one witnesses into connected graphs. To replay a switch (u,v,x,y), replace (u,v) and (x,y) by (u,y) and (x,v). Unlisted vertices in a permutation retain their names.
 
 Cornell is the only case where requiring connectedness changes a three-step endpoint. The initial review bracketed the connected maximum between **22.0317%** (a connected witness) and **22.3900%** (the unrestricted maximum). Excluding leaf–leaf edges and enforcing a neighbor in the non-leaf core for every non-leaf strengthened the component-cut model. It closed the gap after 105 solves. The connected maximizing graph has exact witness score **790411/3580225**, or **22.0771%**, and is stored with the numerical solver bound. The minimum and both endpoints on the other four graphs have connected witnesses attaining the unrestricted values.
 
