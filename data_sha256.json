@@ -1,0 +1,9 @@
+{
+  "football.zip": "147081ba047c919782896b26852f812e65880a9e52f69070069f950eea90c396",
+  "cornell_graph_edges.txt": "12dc60defc4f8a1f18499e3695bfd62ef0421f9b722297276e7f02dec7ae3dca",
+  "cornell_node_feature_label.txt": "38561ad44e29199a826ccef7f94f469b94a912076f83fbc453a69b8ac2b4b858",
+  "texas_graph_edges.txt": "0fe85183243a78cbee9b85a684f8240963d04d1020d10e9cd2b8cfb25e33b476",
+  "texas_node_feature_label.txt": "cf5a3ca346cdd1210b8342e22517fcbbdae658065b7a3145f59350e50e6236a3",
+  "wisconsin_graph_edges.txt": "ebd213511c88fce1eda450c2f920600c4b8cbb38f02384856bcc47c6ec1807ae",
+  "wisconsin_node_feature_label.txt": "a32b0aa38d42f0d36841e8a8cb646d197f0ff33a182ac75a2b4476aeed3c7e4b"
+}
