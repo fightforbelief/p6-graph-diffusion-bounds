@@ -1,27 +1,43 @@
-"""Rebuild manuscript tables from the checked Windows outputs (standard library)."""
+"""Rebuild both manuscript tables from the archived case studies and diagnostics."""
 from pathlib import Path
 import json
 
 paper = Path(__file__).resolve().parent
-root = paper.parent
-runs = json.loads((root / "results/case_studies.json").read_text())["runs"]
-diagnostics = json.loads((root / "results/diagnostics.json").read_text())["runs"]
-diagnostics = {(x["dataset"], x["depth"]): x for x in diagnostics}
-span = lambda pair: 100 * (max(pair) - min(pair))
-primary, depth_rows = [], []
-for row in runs:
-    name, r = row["dataset"], row["depth"]
-    diagnostic = diagnostics[name, r]
-    if r == 1:
-        entries = [name.title(), f'{row["nodes"]}/{row["edges"]}', str(row["classes"])]
-        values = [100*row["observed"][-1], 100*row["bounds"][0], 100*row["bounds"][1],
-                  span(row["sample_range"]), span(row["outer"]), 100*row["independent_label_agreement"]]
-        primary.append(" & ".join(entries + [f"{x:.2f}" for x in values]) + r" \\")
-        second = next(x for x in runs if x["dataset"] == name and x["depth"] == 2)
-        entries = [name.title(), f'{span(diagnostic["lag5_examples"]):.3f}', f'{span(second["bounds"]):.3f}']
-        entries += [str(diagnostics[name, t]["max_deletions"]) for t in (1, 2, 3)]
-        entries += [f'{100*x:+.3f}' for x in diagnostic["one_switch_deltas"]]
-        depth_rows.append(" & ".join(entries) + r" \\")
-(paper / "primary.tex").write_text(r"\newcommand{\primaryrows}{" + "\n" + "\n".join(primary) + "}\n")
-(paper / "depth.tex").write_text(r"\newcommand{\depthrows}{" + "\n" + "\n".join(depth_rows) + "}\n")
+results = paper.parent / "results"
+primary = json.loads((results / "case_studies.json").read_text())["runs"]
+cases = {(r["dataset"], r["depth"]): r for r in primary}
+supplement = json.loads((results / "diagnostics.json").read_text())["runs"]
+diagnostics = {(r["dataset"], r["depth"]): r for r in supplement}
 
+
+def span(values):
+    return 100 * (max(values) - min(values))
+
+
+def interval(pair):
+    return f"{100*pair[0]:.2f}--{100*pair[1]:.2f}"
+
+
+def save_rows(file, macro, rows):
+    text = r"\newcommand{" + macro + "}{\n" + "\n".join(rows) + "}\n"
+    (paper / file).write_text(text)
+
+
+three, five = [], []
+for row in primary:
+    name = row["dataset"]
+    if row["depth"] != 1:
+        continue
+    dataset = name.title()
+    entries = [dataset, f'{row["nodes"]}/{row["edges"]}', f'{100*row["observed"][-1]:.2f}',
+               interval(row["bounds"]), interval(row["outer"]),
+               f'{100*row["independent_label_agreement"]:.2f}', f'{span(row["sample_range"]):.2f}']
+    three.append(" & ".join(entries) + r" \\")
+    diagnostic = diagnostics[name, 1]
+    entries = [dataset, f'{span(diagnostic["lag5_examples"]):.3f}',
+               f'{span(cases[name, 2]["bounds"]):.3f}']
+    entries.extend(str(diagnostics[name, r]["max_deletions"]) for r in (1, 2, 3))
+    entries.extend(f'{100*x:+.3f}' for x in diagnostic["one_switch_deltas"])
+    five.append(" & ".join(entries) + r" \\")
+save_rows("primary.tex", r"\primaryrows", three)
+save_rows("depth.tex", r"\depthrows", five)

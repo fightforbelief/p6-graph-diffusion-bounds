@@ -1,16 +1,26 @@
-# How many steps of label diffusion are fixed by local neighborhood counts?
+# A sharp time horizon for label diffusion from local neighborhood counts
 
-Yunjie Guo and Hanqing Yang. Independent Researcher, Suzhou, China. Correspondence to Hanqing Yang (hanqing.yang189@gmail.com).
+Yunjie Guo and Hanqing Yang · Independent Researcher, Suzhou, China
 
-[Read the manuscript](paper/manuscript.pdf) or [inspect the LaTeX source](paper/manuscript.tex).
+Correspondence: Hanqing Yang (hanqing.yang189@gmail.com)
 
-For a stationary random walk on a simple undirected graph, fixing each named vertex's depth-r color-refinement signature fixes the entire joint endpoint-label distribution through time 2r. A single switch on a connected cycle makes the next time differ. At that time the extrema of any linear contrast reduce to weighted degree-constrained subgraph problems within color blocks. The numerical implementation computes the trace, the probability of matching endpoint labels.
+[Manuscript (PDF)](paper/manuscript.pdf) · [LaTeX source](paper/manuscript.tex)
 
-In five labeled networks the full lag-three width spans 0.68 to 12.91 percentage points under one round of constraints. All five retain the sign of their contrast with independent stationary endpoints. The paper distinguishes finite sampling, sharp attainable endpoints, and maximum edge replacement. It studies stationary label diffusion on known labels. The code symmetrizes hyperlinks and omits self-loops, isolates and weights.
+Fix the depth-*r* color-refinement signature of every named vertex of a simple undirected graph. For a stationary random walk, this determines the joint distribution of the starting and ending labels through step **2r**. At step **2r + 1**, a single switch on a connected cycle can change that distribution. The paper gives attainable bounds on any linear contrast at this first possible step of disagreement. The numerical implementation studies the probability that the two labels agree.
+
+## Main case and control
+
+| Wisconsin WebKB | Result |
+| --- | --- |
+| Three-step agreement with one round fixed | **16.08%–28.98%**, with both endpoints achieved on connected graphs. Independent stationary labels agree **29.92%** of the time. The stub-pairing upper bound is **30.68%** and leaves the sign undecided. |
+| At most one switch from the observed graph | The change ranges from **−0.259 to +0.178 percentage points**. |
+| Five-step agreement with one versus two rounds fixed | With one round the witnessed width is **at least 15.747 percentage points**. With two rounds the full width is **0.01895 points**. These widths cover the primary family of simple graphs. |
+
+In the five empirical graphs, depth three fixes the entire labeled graph up to label-preserving isomorphism. Every lag of label diffusion therefore agrees, including lag seven. Named edges can still change. A separate eight-vertex connected control has 28 realizations with a common three-step agreement of 61/112. Four-step agreement differs by 1/224 between two groups, which proves that these groups include nonisomorphic labeled networks.
 
 ## Reproduction
 
-Run from this project root. The recorded computations ran on the Windows research host with Python 3.12 and the project-local environment. Data retrieval needs network access once. The WebKB inputs are pinned to an upstream commit, and acquired files are checked against [the input SHA-256 manifest](data_sha256.json). Raw downloads are cached under the ignored data directory. Karate is provided by the pinned NetworkX release.
+Run from the project root. The reference run used Windows, Python 3.12.10, and the versions in [requirements.txt](requirements.txt). Acquisition verifies cached files against [their SHA-256 checksums](data_sha256.json). The WebKB inputs are pinned to an upstream commit. NetworkX supplies the karate graph.
 
 ~~~powershell
 py -3.12 -m venv .venv
@@ -21,20 +31,35 @@ py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe experiment.py
 .\.venv\Scripts\python.exe diagnostics.py
 .\.venv\Scripts\python.exe exact_check.py
+.\.venv\Scripts\python.exe review_checks.py
+.\.venv\Scripts\python.exe -m unittest -v test_review
 .\.venv\Scripts\python.exe paper/tables.py
 ~~~
 
-For the manuscript, run Tectonic on paper/manuscript.tex. The vector illustration is included. Its optional regeneration script uses matplotlib with a noninteractive backend. A rerun regenerates results in place and wall times will vary. Different optimal graphs can realize the same endpoint. The exact enumeration script targets depths two and three of the five supplied networks and has exponential worst-case complexity.
+To check the archived release directly, run the data acquisition step and then
 
-## Computation records
+~~~powershell
+.\.venv\Scripts\python.exe -m unittest -v test_diffusion test_review
+~~~
 
-* [Primary protocol](PROTOCOL.md). The five networks, depths, statistic, switch budgets and validation design were specified before the case studies.
-* [Primary results](results/case_studies.json). For all 15 instances this records the observed moments, two extremizing edge lists, relaxed and sampled ranges, chain seeds and draws, optimization times, numerical checks, environment and code checksums. Every edge list uses the normalized vertex order in datasets.py. Timings measure endpoint computation only.
-* [Supplementary diagnostics](results/diagnostics.json). After the primary run we measured maximum replacement of original edges, the entire one-switch range from the observed graph, and a witnessed lower bound on the depth-one lag-five spread. The four lag-five examples are the original graph, the two frontier extremizers and the maximum-replacement witness, in that order.
-* [Exact fractions](results/rational.json). A separate rational-arithmetic recursion gives the two endpoints at depths two and three, including every zero-width case. Each supplementary output identifies the primary result file by checksum.
-* [Tests](test_diffusion.py). All 768 isolate-free simple graphs on five named vertices under a fixed 3:2 label split, grouped independently at depths one and two, plus exact predicted increments on connected-cycle examples through depth eight.
+The tests enumerate the 768 isolate-free five-vertex graphs under a fixed 3:2 label split, check the cycle construction at depths 1–8, reoptimize all 15 empirical endpoint pairs, and independently check the review witnesses. The eight-vertex enumeration uses exact fractions. An independent search over all edge pairs verifies the completeness of each depth-three switch list and checks the saved label-preserving permutations.
 
-## Inputs
+Build the paper from the root using Tectonic on paper/manuscript.tex. The vector illustration is included. Its optional regeneration script uses matplotlib with a noninteractive backend. Regenerating the case studies replaces local result files. Wall times and the choice among tied optimal witnesses can vary.
 
-Geom-GCN WebKB uses Cornell, Texas and Wisconsin webpage categories. Football uses the 2000 US college conference affiliations. Karate uses the observed split as encoded by NetworkX. See the manuscript for the original study references and datasets.py for the exact input paths. [Geom-GCN release](https://github.com/bingzhewei/geom-gcn/tree/1124af17444d7fd09686504ec46caa3f39f4f632/new_data) · [Newman's network data](https://websites.umich.edu/~mejn/netdata/) · [NetworkX karate club data](https://networkx.org/documentation/stable/reference/generated/networkx.generators.social.karate_club_graph.html).
+## Code and results
 
+| Analysis | Entry point | Archived output |
+| --- | --- | --- |
+| Primary bounds, endpoint graphs, stub bounds and 96 constrained-switch draws per instance | [experiment.py](experiment.py), [primary protocol](PROTOCOL.md) | [case_studies.json](results/case_studies.json) |
+| Maximum replacement of original edges, one-switch effects and five-step witness values | [diagnostics.py](diagnostics.py) | [diagnostics.json](results/diagnostics.json) |
+| Independent rational endpoint enumeration at depths two and three | [exact_check.py](exact_check.py) | [rational.json](results/rational.json) |
+| Eight-vertex control, depth-three isomorphisms and connected witnesses | [review_checks.py](review_checks.py) | [review.json](results/review.json) |
+| Connected Cornell maximum with component cuts | [connected_bound.py](connected_bound.py), called by the review program | [review.json](results/review.json), under **cornell_connected_maximum** |
+
+The review was performed after the primary study. Its result file contains the counts and representative cross-neighbor sets for the control, one permutation for each depth-three switch, and the moves that turn saved depth-one witnesses into connected graphs. To replay a switch (u,v,x,y), replace (u,v) and (x,y) by (u,y) and (x,v). Unlisted vertices in a permutation retain their names.
+
+Cornell is the only case where requiring connectedness changes a three-step endpoint. The initial review bracketed the connected maximum between **22.0317%** (a connected witness) and **22.3900%** (the unrestricted maximum). Excluding leaf–leaf edges and enforcing a neighbor in the non-leaf core for every non-leaf strengthened the component-cut model. It closed the gap after 105 solves. The connected maximizing graph has exact witness score **790411/3580225**, or **22.0771%**, and is stored with the numerical solver bound. The minimum and both endpoints on the other four graphs have connected witnesses attaining the unrestricted values.
+
+## Inputs and scope
+
+The data comprise an observed club split, college football conferences and three campuses from one collection of labeled webpages. The code merges reciprocal edges, drops loops and isolates, and discards edge weights. The manuscript concerns stationary diffusion on observed labels. [Geom-GCN WebKB inputs](https://github.com/bingzhewei/geom-gcn/tree/1124af17444d7fd09686504ec46caa3f39f4f632/new_data) · [Newman's network data](https://websites.umich.edu/~mejn/netdata/) · [NetworkX karate data](https://networkx.org/documentation/stable/reference/generated/networkx.generators.social.karate_club_graph.html).
